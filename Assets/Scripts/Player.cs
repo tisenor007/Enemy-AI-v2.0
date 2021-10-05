@@ -4,12 +4,15 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public float speed;
+    public float speed = 15;
+    public int jumpHeight;
+    private float originSpeed;
     private Rigidbody rb;
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        originSpeed = speed;
     }
 
     // Update is called once per frame
@@ -22,5 +25,18 @@ public class Player : MonoBehaviour
         Vector3 newMovePos = new Vector3(movePos.x, rb.velocity.y, movePos.z);
 
         rb.velocity = newMovePos;
+
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            speed = 30;
+        }
+        if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            speed = originSpeed;
+        }
+        //if (Input.GetKeyDown(KeyCode.Space))
+        //{
+            //transform.Translate(0, jumpHeight * Time.deltaTime, 0);
+        //}
     }
 }
