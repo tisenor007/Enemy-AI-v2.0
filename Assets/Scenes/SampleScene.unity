@@ -3030,7 +3030,7 @@ GameObject:
   - component: {fileID: 1135895933}
   m_Layer: 0
   m_Name: Plane
-  m_TagString: Untagged
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 8
@@ -3818,8 +3818,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tunnelVision: 100
-  hearingRange: 4
+  awarenessRange: 4
+  setAwareness: 0
   enemy: {fileID: 1460969505}
+  awareness: {fileID: 1460969511}
   patrolPoints:
   - {fileID: 218567358}
   - {fileID: 701769680}

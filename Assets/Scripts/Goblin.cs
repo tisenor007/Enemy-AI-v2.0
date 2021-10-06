@@ -24,6 +24,7 @@ public class Goblin : Enemy
     void Update()
     {
         Debug.Log(distanceBetweenTarget);
+        awareness.radius = awarenessRange;
         if (target == null){ return; }
         else
         {
@@ -38,7 +39,7 @@ public class Goblin : Enemy
             }
             return;
         }
-        if (distanceBetweenTarget <= hearingRange)
+        if (distanceBetweenTarget <= awarenessRange)
         {
             SwitchState(State.chasing, patrolPoints);
         }
@@ -50,13 +51,18 @@ public class Goblin : Enemy
             }
         }
     }
-    private void OnTriggerEnter(Collider other)
+    public void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Wall"){return;}
+        if (other.gameObject.tag == "Wall") { return; }
         else
         {
+            awareness.radius = 10;
             target = other.gameObject;
         }
     }
-    //somehow make hearing float related to trigger radius......
+    public void OnTriggerExit(Collider other)
+    {
+        awareness.radius = setAwareness;
+    }
+
 }

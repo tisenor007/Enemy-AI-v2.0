@@ -6,8 +6,10 @@ using UnityEngine.AI;
 public class Enemy : MonoBehaviour
 {
     public int tunnelVision;
-    public int hearingRange;
+    public int awarenessRange;
+    public int setAwareness;
     public NavMeshAgent enemy;
+    public SphereCollider awareness;
     protected enum State
     {
         patrolling,
@@ -26,12 +28,14 @@ public class Enemy : MonoBehaviour
     protected GameObject target;
     protected Vector3 targetLastKnownPos;
 
+    
     private int patrolDestination;
     private int patrolPointAmount = 16;
 
     // Start is called before the first frame update
     void Start()
     {
+        setAwareness = awarenessRange;
         patrolDestination = 0; 
     }
 
@@ -91,6 +95,7 @@ public class Enemy : MonoBehaviour
         float searchDistance = Vector3.Distance(targetLastKnownPos, enemy.transform.position);
         if (searchDistance <= 1) { SwitchState(State.retreating, patrolPoints); }
     }
+   
+    //somehow make hearing float related to trigger radius......
 
-    
 }
