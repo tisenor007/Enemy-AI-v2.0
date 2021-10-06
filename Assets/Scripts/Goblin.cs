@@ -5,23 +5,58 @@ using UnityEngine.AI;
 
 public class Goblin : Enemy
 {
-    public NavMeshAgent goblin;
     public Transform[] patrolPoints;
+
     private float remainingDistance = 0.5f;
+
+    private Ray ray;
+    private RaycastHit rayHit;
     // Start is called before the first frame update
     void Start()
     {
-        goblin.autoBraking = false;
-        goblin = GetComponent<NavMeshAgent>();
-        SwitchState(State.patrolling, goblin, patrolPoints);
+        ray = new Ray(this.transform.position, this.transform.forward);
+        enemy.autoBraking = false;
+        enemy = GetComponent<NavMeshAgent>();
+        SwitchState(State.patrolling, patrolPoints);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!goblin.pathPending && goblin.remainingDistance < remainingDistance)
+        Debug.Log(distanceBetweenTarget);
+        if (target == null){ return; }
+        else
         {
-            SwitchState(State.patrolling, goblin, patrolPoints);
+            distanceBetweenTarget = Vector3.Distance(target.transform.position, enemy.transform.position);
+        }
+        if (Physics.Raycast(transform.position, transform.forward, out rayHit, tunnelVision))
+        {
+            if (rayHit.transform.gameObject.tag == "Player")
+            {
+                target = rayHit.transform.gameObject;
+                SwitchState(State.chasing, patrolPoints);
+            }
+            return;
+        }
+        if (distanceBetweenTarget <= hearingRange)
+        {
+            SwitchState(State.chasing, patrolPoints);
+        }
+        else
+        {
+            if (!enemy.pathPending && enemy.remainingDistance < remainingDistance)
+            {
+                SwitchState(State.patrolling, patrolPoints);
+            }
         }
     }
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.tag == "Wall"){return;}
+        else
+        {
+            target = other.gameObject;
+        }
+    }
+    //somehow make hearing float related to trigger radius......
 }

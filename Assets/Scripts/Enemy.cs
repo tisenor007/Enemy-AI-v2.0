@@ -5,6 +5,9 @@ using UnityEngine.AI;
 
 public class Enemy : MonoBehaviour
 {
+    public int tunnelVision;
+    public int hearingRange;
+    public NavMeshAgent enemy;
     protected enum State
     {
         patrolling,
@@ -17,6 +20,8 @@ public class Enemy : MonoBehaviour
         guarding,
     }
     protected State state;
+
+    protected float distanceBetweenTarget;
 
     protected GameObject target;
     protected Vector3 targetLastKnownPos;
@@ -35,28 +40,28 @@ public class Enemy : MonoBehaviour
     {
         
     }
-    protected void SwitchState(State newState, NavMeshAgent enemy, Transform[] patrolPoints)
+    protected void SwitchState(State newState, Transform[] patrolPoints)
     {
         state = newState;
 
         switch (state)
         {
             case State.patrolling:
-                Patrol(enemy, patrolPoints);
+                Patrol(patrolPoints);
                 break;
             case State.retreating:
-                Retreat(enemy, patrolPoints);
+                Retreat(patrolPoints);
                 break;
             case State.chasing:
-                Chase(enemy, patrolPoints);
+                Chase(patrolPoints);
                 break;
             case State.searchinng:
-                Search(enemy, patrolPoints);
+                Search(patrolPoints);
                 break;
         }
     }
 
-    public void Patrol(NavMeshAgent enemy, Transform[] patrolPoints)
+    public void Patrol(Transform[] patrolPoints)
     {
         enemy.autoBraking = false;
         if (patrolPoints.Length == 0) { enabled = false; return; }
@@ -64,27 +69,27 @@ public class Enemy : MonoBehaviour
         patrolDestination = (patrolDestination + 1) % patrolPoints.Length;
     }
 
-    public void Retreat(NavMeshAgent enemy, Transform[] patrolPoints)
+    public void Retreat( Transform[] patrolPoints)
     {
         patrolDestination = 0;
         enemy.autoBraking = true;
         if (this.transform.position.x == patrolPoints[0].position.x && this.transform.position.z == patrolPoints[0].position.z)
         {
-            SwitchState(State.patrolling, enemy, patrolPoints);
+            SwitchState(State.patrolling, patrolPoints);
         }
         enemy.SetDestination(patrolPoints[0].position);
     }
-    public void Chase(NavMeshAgent enemy, Transform[] patrolPoints)
+    public void Chase(Transform[] patrolPoints)
     {
         targetLastKnownPos = target.transform.position;
         enemy.SetDestination(targetLastKnownPos);
     }
-    public void Search(NavMeshAgent enemy, Transform[] patrolPoints)
+    public void Search(Transform[] patrolPoints)
     {
         enemy.autoBraking = true;
         enemy.SetDestination(targetLastKnownPos);
         float searchDistance = Vector3.Distance(targetLastKnownPos, enemy.transform.position);
-        if (searchDistance <= 1) { SwitchState(State.retreating, enemy, patrolPoints); }
+        if (searchDistance <= 1) { SwitchState(State.retreating, patrolPoints); }
     }
 
     
