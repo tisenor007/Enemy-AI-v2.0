@@ -5,16 +5,23 @@ using UnityEngine.AI;
 
 public class Enemy : MonoBehaviour
 {
-    public int tunnelVision;
-    public int awarenessRange;
-    public int setAwareness;
+
+    //implement this.tag, such&such for possible breeding....
+    public Transform[] patrolPoints;
     public NavMeshAgent enemy;
-    public SphereCollider awareness;
+    public Player playerScript;
+    public int tunnelVision;//rayRange
+    public int awareness;
+    protected float actionDistance = 0.5f;
+    protected int originAwareness;
+    protected float originSpeed;
+    protected int maxAwareness;
+    protected float maxSpeed;
     protected enum State
     {
         patrolling,
         chasing,
-        searchinng,
+        searching,
         attacking,
         retreating,
         breeding,
@@ -29,73 +36,157 @@ public class Enemy : MonoBehaviour
     protected Vector3 targetLastKnownPos;
 
     
-    private int patrolDestination;
+    protected int patrolDestination;
     private int patrolPointAmount = 16;
+
+    private Ray ray;
+    private RaycastHit rayHit;
 
     // Start is called before the first frame update
     void Start()
     {
-        setAwareness = awarenessRange;
-        patrolDestination = 0; 
+        originSpeed = enemy.speed;
+        originAwareness = awareness;
+        maxAwareness = awareness * 2;
+        maxSpeed = enemy.speed * 2;
+
+        ray = new Ray(this.transform.position, this.transform.forward);
+
+        enemy.autoBraking = false;
+        enemy = GetComponent<NavMeshAgent>();
+
+        patrolDestination = 0;
+        SwitchState(State.patrolling);
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        Debug.Log(state);
+        if (target != null)
+        {
+            distanceBetweenTarget = Vector3.Distance(enemy.transform.position, target.transform.position);
+        }
+        if (state == State.patrolling)
+        {
+            if (!enemy.pathPending && enemy.remainingDistance < actionDistance)
+            {
+                SwitchState(State.patrolling);
+            }
+        }
+        if (state != State.chasing)
+        {
+            if (Physics.Raycast(transform.position, transform.forward, out rayHit, tunnelVision))
+            {
+                if (rayHit.transform.gameObject.tag == "Player")
+                {
+                    target = rayHit.transform.gameObject;
+                    SwitchState(State.chasing);
+                }
+            }
+
+            if (target != null)
+            {
+                if (distanceBetweenTarget <= awareness)
+                {
+                    if (target.tag == "Player" && playerScript.crouching == false)
+                    {
+                        SwitchState(State.chasing);
+                    }
+                }
+            }
+        }
+        else if (state == State.chasing)
+        {
+            if (distanceBetweenTarget > awareness)
+            {
+                SwitchState(State.searching);
+            }
+            if (Physics.Raycast(transform.position, transform.forward, out rayHit, tunnelVision))
+            {
+                if (rayHit.transform.gameObject.tag == "Player")
+                {
+                    target = rayHit.transform.gameObject;
+                    SwitchState(State.chasing);
+                }
+            }
+
+            if (target != null)
+            {
+                if (distanceBetweenTarget <= awareness)
+                {
+                    if (target.tag == "Player" && playerScript.crouching == false)
+                    {
+                        SwitchState(State.chasing);
+                    }
+                }
+            }
+        }
+        if (state == State.searching)
+        {
+            float searchDistance = Vector3.Distance(targetLastKnownPos, enemy.transform.position);
+            if (searchDistance <= 1) { SwitchState(State.retreating); }
+        }
+        if (state == State.retreating)
+        {
+            float startDistance = Vector3.Distance(patrolPoints[0].position, enemy.transform.position);
+            if (startDistance <= 2) { SwitchState(State.patrolling); }
+        }
     }
-    protected void SwitchState(State newState, Transform[] patrolPoints)
+    protected void SwitchState(State newState)
     {
         state = newState;
 
         switch (state)
         {
             case State.patrolling:
-                Patrol(patrolPoints);
+                Patrol();
                 break;
             case State.retreating:
-                Retreat(patrolPoints);
+                Retreat();
                 break;
             case State.chasing:
-                Chase(patrolPoints);
+                Chase();
                 break;
-            case State.searchinng:
-                Search(patrolPoints);
+            case State.searching:
+                Search();
                 break;
         }
     }
 
-    public void Patrol(Transform[] patrolPoints)
+    public void Patrol()
     {
-        enemy.autoBraking = false;
+        enemy.speed = originSpeed;
+        awareness = originAwareness;
         if (patrolPoints.Length == 0) { enabled = false; return; }
         enemy.destination = patrolPoints[patrolDestination].position;
         patrolDestination = (patrolDestination + 1) % patrolPoints.Length;
     }
 
-    public void Retreat( Transform[] patrolPoints)
+    public void Retreat()
     {
-        patrolDestination = 0;
-        enemy.autoBraking = true;
-        if (this.transform.position.x == patrolPoints[0].position.x && this.transform.position.z == patrolPoints[0].position.z)
-        {
-            SwitchState(State.patrolling, patrolPoints);
-        }
+        enemy.speed = originSpeed;
+        awareness = originAwareness;
         enemy.SetDestination(patrolPoints[0].position);
     }
-    public void Chase(Transform[] patrolPoints)
+    public void Chase()
     {
+        enemy.speed = maxSpeed;
+        awareness = maxAwareness;
         targetLastKnownPos = target.transform.position;
         enemy.SetDestination(targetLastKnownPos);
     }
-    public void Search(Transform[] patrolPoints)
+    public void Search()
     {
-        enemy.autoBraking = true;
+        enemy.speed = originSpeed;
+        awareness = originAwareness;
         enemy.SetDestination(targetLastKnownPos);
-        float searchDistance = Vector3.Distance(targetLastKnownPos, enemy.transform.position);
-        if (searchDistance <= 1) { SwitchState(State.retreating, patrolPoints); }
     }
-   
-    //somehow make hearing float related to trigger radius......
-
+    public void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.tag != "Wall")
+        {
+            target = other.gameObject;
+        }
+    }
 }

@@ -6,6 +6,7 @@ public class Player : MonoBehaviour
 {
     public float speed = 15;
     public int jumpHeight;
+    public bool crouching = false;
     private float originSpeed;
     private Rigidbody rb;
     // Start is called before the first frame update
@@ -28,15 +29,28 @@ public class Player : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.LeftShift))
         {
-            speed = 30;
+            speed = speed * 2;
         }
         if (Input.GetKeyUp(KeyCode.LeftShift))
         {
             speed = originSpeed;
         }
+
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            speed = speed / 3;
+            this.gameObject.transform.localScale = new Vector3(this.gameObject.transform.localScale.x, this.gameObject.transform.localScale.y / 1.5f, this.gameObject.transform.localScale.z);
+            crouching = true;
+        }
+        if (Input.GetKeyUp(KeyCode.C))
+        {
+            speed = originSpeed;
+            this.gameObject.transform.localScale = new Vector3(this.gameObject.transform.localScale.x, this.gameObject.transform.localScale.y * 1.5f, this.gameObject.transform.localScale.z);
+            crouching = false;
+        }
         //if (Input.GetKeyDown(KeyCode.Space))
         //{
-            //transform.Translate(0, jumpHeight * Time.deltaTime, 0);
+        //transform.Translate(0, jumpHeight * Time.deltaTime, 0);
         //}
     }
 }
