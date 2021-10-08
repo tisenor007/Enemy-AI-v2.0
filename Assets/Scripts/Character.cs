@@ -9,6 +9,7 @@ public class Character : MonoBehaviour
     public bool isDead;
     public Rigidbody rb;
     public GameObject homeBase;
+    public bool crouching = false;
     protected float distanceBetweenHomeBase;
     protected int healingCoolDown = 2000;
     protected int maxHealCoolDown;

@@ -482,10 +482,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 219945add4ed43a41bd274c17103e3e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 100
+  health: 125
   attackDamage: 10
   isDead: 0
   rb: {fileID: 0}
+  homeBase: {fileID: 0}
+  crouching: 0
   patrolPoints:
   - {fileID: 0}
   - {fileID: 0}
@@ -504,7 +506,6 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   enemy: {fileID: 9063389720860212339}
-  playerScript: {fileID: 0}
   tunnelVision: 250
   awareness: 8
   attackDelay: 5

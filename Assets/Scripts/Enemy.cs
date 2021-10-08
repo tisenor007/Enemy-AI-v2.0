@@ -9,7 +9,6 @@ public class Enemy : Character
     //implement this.tag, such&such for possible breeding....
     public Transform[] patrolPoints;
     public NavMeshAgent enemy;
-    public Player playerScript;
 
     public int tunnelVision;//rayRange
     public int awareness;
@@ -58,6 +57,7 @@ public class Enemy : Character
     // Start is called before the first frame update
     void Start()
     {
+        crouching = false;
         maxHealCoolDown = healingCoolDown;
         rb = this.gameObject.GetComponent<Rigidbody>();
         attackDelay = attackDelay * 100;
@@ -87,7 +87,7 @@ public class Enemy : Character
         distanceBetweenHomeBase = Vector3.Distance(homeBase.transform.position, this.transform.position);
         healthBar.rectTransform.sizeDelta = new Vector2(originSize * health / maxHealth, healthBar.rectTransform.sizeDelta.y);
         canvas.transform.LookAt(canvas.transform.position + camera.forward);
-        Debug.Log(state);
+        //Debug.Log(state);
         if (isDead == true && state != State.dead)
         {
             SwitchState(State.dead);
@@ -176,6 +176,7 @@ public class Enemy : Character
                 {
                     if (rayHit.transform.gameObject.tag != "NonTarget" && rayHit.transform.gameObject.tag != this.gameObject.tag)
                     {
+                        Debug.Log("AYOOO");
                         target = rayHit.transform.gameObject;
                         targetScript = target.GetComponent<Character>();
                         if (distanceBetweenTarget > actionDistance && targetScript.isDead == false && state != State.fleeing)
@@ -189,9 +190,16 @@ public class Enemy : Character
                 {
                     if (distanceBetweenTarget <= awareness && distanceBetweenTarget > actionDistance)
                     {
-                        if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && playerScript.crouching == false && targetScript.isDead == false && state != State.fleeing)
+                        if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && targetScript.crouching == false && targetScript.isDead == false && state != State.fleeing)
                         {
                             SwitchState(State.chasing);
+                        }
+                    }
+                    if (distanceBetweenTarget <= actionDistance)
+                    {
+                        if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && targetScript.crouching == false && targetScript.isDead == false)
+                        {
+                            SwitchState(State.attacking);
                         }
                     }
                 }
@@ -210,6 +218,7 @@ public class Enemy : Character
                 {
                     if (rayHit.transform.gameObject.tag != "NonTarget" && rayHit.transform.gameObject.tag != this.gameObject.tag)
                     {
+                        //Debug.Log("AYOOO");
                         target = rayHit.transform.gameObject;
                         targetScript = target.GetComponent<Character>();
                         if (distanceBetweenTarget > actionDistance && targetScript.isDead == false)
@@ -222,9 +231,16 @@ public class Enemy : Character
                 {
                     if (distanceBetweenTarget <= awareness && distanceBetweenTarget > actionDistance)
                     {
-                        if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && playerScript.crouching == false && targetScript.isDead == false)
+                        if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && targetScript.crouching == false && targetScript.isDead == false)
                         {
                             SwitchState(State.chasing);
+                        }
+                    }
+                    if (distanceBetweenTarget <= actionDistance)
+                    {
+                        if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && targetScript.crouching == false && targetScript.isDead == false)
+                        {
+                            SwitchState(State.attacking);
                         }
                     }
                 }
@@ -347,7 +363,7 @@ public class Enemy : Character
     }
     public void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag != "NonTarget" && other.gameObject.tag != this.gameObject.tag)
+        if (other.gameObject.tag != "NonTarget" && other.gameObject.tag != this.gameObject.tag && isDead == false)
         {
             target = other.gameObject;
             targetScript = target.GetComponent<Character>();
@@ -355,11 +371,14 @@ public class Enemy : Character
     }
     public void OnCollisionEnter(Collision other)
     {
-        if (other.gameObject.tag != "NonTarget" && other.gameObject.tag != this.gameObject.tag)
+        if (other.gameObject.tag != "NonTarget" && other.gameObject.tag != this.gameObject.tag && isDead == false)
         {
             target = other.gameObject;
             targetScript = target.GetComponent<Character>();
-            SwitchState(State.chasing);
+            if (state != State.fleeing)
+            {
+                SwitchState(State.attacking);
+            }
         }
     }
 }

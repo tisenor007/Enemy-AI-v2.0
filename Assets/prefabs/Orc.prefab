@@ -486,6 +486,8 @@ MonoBehaviour:
   attackDamage: 20
   isDead: 0
   rb: {fileID: 0}
+  homeBase: {fileID: 0}
+  crouching: 0
   patrolPoints:
   - {fileID: 0}
   - {fileID: 0}
@@ -504,8 +506,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   enemy: {fileID: 1433277429209145422}
-  playerScript: {fileID: 0}
-  tunnelVision: 300
+  tunnelVision: 150
   awareness: 8
   attackDelay: 15
   healthBar: {fileID: 1433277428138705423}

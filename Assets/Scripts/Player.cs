@@ -7,7 +7,6 @@ public class Player : Character
 {
     public float speed = 15;
     public int jumpHeight;
-    public bool crouching = false;
     public Text healthtxt;
     public GameObject gameOverCanvas;
     protected Enemy enemyScript;
