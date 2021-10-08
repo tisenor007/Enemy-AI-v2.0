@@ -8,6 +8,10 @@ public class Character : MonoBehaviour
     public int attackDamage;
     public bool isDead;
     public Rigidbody rb;
+    public GameObject homeBase;
+    protected float distanceBetweenHomeBase;
+    protected int healingCoolDown = 2000;
+    protected int maxHealCoolDown;
     protected float actionDistance = 5.5f;
     protected GameObject target;
     protected int maxHealth;
@@ -30,6 +34,14 @@ public class Character : MonoBehaviour
             health = 0;
             isDead = true;
             rb.constraints = RigidbodyConstraints.FreezeAll;
+        }
+    }
+    public void Heal(int hp)
+    {
+        health = health + hp;
+        if (health >= maxHealth)
+        {
+            health = maxHealth;
         }
     }
 }

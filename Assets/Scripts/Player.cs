@@ -9,6 +9,7 @@ public class Player : Character
     public int jumpHeight;
     public bool crouching = false;
     public Text healthtxt;
+    public GameObject gameOverCanvas;
     protected Enemy enemyScript;
     private float originSpeed;
     private bool canAttack;
@@ -16,6 +17,7 @@ public class Player : Character
     // Start is called before the first frame update
     void Start()
     {
+        maxHealCoolDown = healingCoolDown;
         maxHealth = health;
         isDead = false;
         canAttack = false;
@@ -26,6 +28,7 @@ public class Player : Character
     // Update is called once per frame
     void Update()
     {
+        distanceBetweenHomeBase = Vector3.Distance(homeBase.transform.position, this.transform.position);
         healthtxt.text = health.ToString();
         float Xaxis = Input.GetAxis("Horizontal") * speed;
         float Zaxis = Input.GetAxis("Vertical") * speed;
@@ -34,44 +37,58 @@ public class Player : Character
         Vector3 newMovePos = new Vector3(movePos.x, rb.velocity.y, movePos.z);
 
         rb.velocity = newMovePos;
-
-        if (target != null)
+        if (isDead == true) { gameOverCanvas.SetActive(true); }
+        else
         {
-            distanceBetweenTarget = Vector3.Distance(this.transform.position, target.transform.position);
-            if (distanceBetweenTarget <= actionDistance)
+            gameOverCanvas.SetActive(false);
+            if (distanceBetweenHomeBase <= actionDistance)
             {
-                canAttack = true;
+                healingCoolDown--;
+                if (healingCoolDown <= 10)
+                {
+                    Heal(maxHealth / 4);
+                    healingCoolDown = maxHealCoolDown;
+                }
             }
-            if (distanceBetweenTarget > actionDistance)
+
+            if (target != null)
             {
-                canAttack = false;
+                distanceBetweenTarget = Vector3.Distance(this.transform.position, target.transform.position);
+                if (distanceBetweenTarget <= actionDistance)
+                {
+                    canAttack = true;
+                }
+                if (distanceBetweenTarget > actionDistance)
+                {
+                    canAttack = false;
+                }
             }
-        }
-        if (Input.GetKeyDown(KeyCode.Space) && canAttack == true)
-        {
-            enemyScript.TakeDamage(this.attackDamage);
-        }
+            if (Input.GetKeyDown(KeyCode.Space) && canAttack == true)
+            {
+                enemyScript.TakeDamage(this.attackDamage);
+            }
 
-        if (Input.GetKeyDown(KeyCode.LeftShift))
-        {
-            speed = speed * 2;
-        }
-        if (Input.GetKeyUp(KeyCode.LeftShift))
-        {
-            speed = originSpeed;
-        }
+            if (Input.GetKeyDown(KeyCode.LeftShift))
+            {
+                speed = speed * 2;
+            }
+            if (Input.GetKeyUp(KeyCode.LeftShift))
+            {
+                speed = originSpeed;
+            }
 
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            speed = speed / 3;
-            this.gameObject.transform.localScale = new Vector3(this.gameObject.transform.localScale.x, this.gameObject.transform.localScale.y / 1.25f, this.gameObject.transform.localScale.z);
-            crouching = true;
-        }
-        if (Input.GetKeyUp(KeyCode.C))
-        {
-            speed = originSpeed;
-            this.gameObject.transform.localScale = new Vector3(this.gameObject.transform.localScale.x, this.gameObject.transform.localScale.y * 1.25f, this.gameObject.transform.localScale.z);
-            crouching = false;
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                speed = speed / 3;
+                this.gameObject.transform.localScale = new Vector3(this.gameObject.transform.localScale.x, this.gameObject.transform.localScale.y / 1.25f, this.gameObject.transform.localScale.z);
+                crouching = true;
+            }
+            if (Input.GetKeyUp(KeyCode.C))
+            {
+                speed = originSpeed;
+                this.gameObject.transform.localScale = new Vector3(this.gameObject.transform.localScale.x, this.gameObject.transform.localScale.y * 1.25f, this.gameObject.transform.localScale.z);
+                crouching = false;
+            }
         }
     }
     public void OnTriggerEnter(Collider other)

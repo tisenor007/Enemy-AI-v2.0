@@ -8,6 +8,7 @@ TagManager:
   - NonTarget
   - Goblin
   - Orc
+  - Zombie
   layers:
   - Default
   - TransparentFX
