@@ -13,10 +13,12 @@ public class Enemy : Character
 
     public int tunnelVision;//rayRange
     public int awareness;
+    public int attackDelay;
     [Header("For Health bar")]
     public Image healthBar;
     public GameObject canvas;
     public Transform camera;
+    public bool isGuard;
 
     protected Character targetScript;
     protected int originAwareness;
@@ -24,6 +26,9 @@ public class Enemy : Character
     protected int maxAwareness;
     protected float maxSpeed;
 
+    private int maxAttackDelay;
+    private Vector3 originPos;
+    private Vector3 originRot;
     private float originSize;
     protected enum State
     {
@@ -53,6 +58,11 @@ public class Enemy : Character
     // Start is called before the first frame update
     void Start()
     {
+        rb = this.gameObject.GetComponent<Rigidbody>();
+        attackDelay = attackDelay * 600;
+        maxAttackDelay = attackDelay;
+        originPos = this.transform.position;
+        originRot = this.transform.eulerAngles;
         maxHealth = health;
         isDead = false;
         originSpeed = enemy.speed;
@@ -63,11 +73,11 @@ public class Enemy : Character
         originSize = healthBar.rectTransform.sizeDelta.x;
         ray = new Ray(this.transform.position, this.transform.forward);
 
-        enemy.autoBraking = false;
         enemy = GetComponent<NavMeshAgent>();
 
         patrolDestination = 0;
-        SwitchState(State.patrolling);
+        if (isGuard == true) {SwitchState(State.guarding); }
+        else {SwitchState(State.patrolling); }
     }
 
     // Update is called once per frame
@@ -95,28 +105,54 @@ public class Enemy : Character
             }
             if (state == State.attacking)
             {
+                attackDelay--;
                 if (targetScript.isDead == true)
                 {
-                    SwitchState(State.patrolling);
+                    if (isGuard == true) { SwitchState(State.guarding); }
+                    else
+                    {
+                        attackDelay = maxAttackDelay;
+                        SwitchState(State.patrolling);
+                    }
+                }
+                else
+                {
+                    if (attackDelay <= 10)
+                    {
+                        attack();
+                        attackDelay = maxAttackDelay;
+                    }
+                    if (target != null)
+                    {
+                        if (distanceBetweenTarget >= actionDistance)
+                        {
+                            SwitchState(State.chasing);
+                        }
+                    }
                 }
             }
             //Chasing-----------------------------------------------------------------------------------
+
             if (state != State.chasing && state != State.attacking)
             {
                 if (Physics.Raycast(transform.position, transform.forward, out rayHit, tunnelVision))
                 {
-                    if (rayHit.transform.gameObject.tag == "Player")
+                    if (rayHit.transform.gameObject.tag != "NonTarget" && rayHit.transform.gameObject.tag != this.gameObject.tag)
                     {
                         target = rayHit.transform.gameObject;
-                        SwitchState(State.chasing);
+                        targetScript = target.GetComponent<Character>();
+                        if (distanceBetweenTarget > actionDistance && targetScript.isDead == false)
+                        {
+                            SwitchState(State.chasing);
+                        }
                     }
                 }
 
                 if (target != null)
                 {
-                    if (distanceBetweenTarget <= awareness)
+                    if (distanceBetweenTarget <= awareness && distanceBetweenTarget > actionDistance)
                     {
-                        if (target.tag == "Player" && playerScript.crouching == false)
+                        if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && playerScript.crouching == false && targetScript.isDead == false)
                         {
                             SwitchState(State.chasing);
                         }
@@ -135,24 +171,30 @@ public class Enemy : Character
                 }
                 if (Physics.Raycast(transform.position, transform.forward, out rayHit, tunnelVision))
                 {
-                    if (rayHit.transform.gameObject.tag == "Player")
+                    if (rayHit.transform.gameObject.tag != "NonTarget" && rayHit.transform.gameObject.tag != this.gameObject.tag)
                     {
                         target = rayHit.transform.gameObject;
-                        SwitchState(State.chasing);
+                        targetScript = target.GetComponent<Character>();
+                        if (distanceBetweenTarget > actionDistance && targetScript.isDead == false)
+                        {
+                            SwitchState(State.chasing);
+                        }
                     }
                 }
 
                 if (target != null)
                 {
-                    if (distanceBetweenTarget <= awareness)
+                    if (distanceBetweenTarget <= awareness && distanceBetweenTarget > actionDistance)
                     {
-                        if (target.tag == "Player" && playerScript.crouching == false)
+                        if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && playerScript.crouching == false && targetScript.isDead == false)
                         {
                             SwitchState(State.chasing);
                         }
                     }
                 }
             }
+                
+            
             //searching------------------------------------------------------------------------------------------------
             if (state == State.searching)
             {
@@ -161,8 +203,20 @@ public class Enemy : Character
             }
             if (state == State.retreating)
             {
-                float startDistance = Vector3.Distance(patrolPoints[0].position, enemy.transform.position);
-                if (startDistance <= 2) { SwitchState(State.patrolling); }
+                if (isGuard == true) { SwitchState(State.guarding); }
+                else
+                {
+                    float startDistance = Vector3.Distance(patrolPoints[0].position, enemy.transform.position);
+                    if (startDistance <= 2) { SwitchState(State.patrolling); }
+                }
+            }
+            if (state == State.guarding)
+            {
+                float originPosDistance = Vector3.Distance(originPos, enemy.transform.position);
+                if (originPosDistance <= actionDistance)
+                {
+                    enemy.transform.eulerAngles = originRot;
+                }
             }
         }
     }
@@ -173,26 +227,39 @@ public class Enemy : Character
         switch (state)
         {
             case State.patrolling:
+                enemy.autoBraking = false;
                 Patrol();
                 break;
             case State.retreating:
+                enemy.autoBraking = false;
                 Retreat();
                 break;
             case State.chasing:
+                enemy.autoBraking = false;
                 Chase();
                 break;
             case State.searching:
+                enemy.autoBraking = false;
                 Search();
                 break;
             case State.attacking:
-                attack();
+                enemy.autoBraking = true;
+                break;
+            case State.guarding:
+                enemy.autoBraking = true;
+                Guard();
                 break;
             case State.dead:
-                die();
+                enemy.autoBraking = true;
+                Die();
                 break;
         }
     }
-    public void die()
+    public void Guard()
+    {
+        enemy.SetDestination(originPos);
+    }
+    public void Die()
     {
         this.gameObject.transform.Rotate(90, 0, 0);
         this.gameObject.GetComponent<Collider>().enabled = false;
@@ -243,13 +310,8 @@ public class Enemy : Character
     {
         if (other.gameObject.tag != "NonTarget" && other.gameObject.tag != this.gameObject.tag)
         {
-            SwitchState(State.attacking);
-        }
-    }
-    public void OnCollisionExit(Collision other)
-    {
-        if (other.gameObject.tag != "NonTarget" && other.gameObject.tag != this.gameObject.tag)
-        {
+            target = other.gameObject;
+            targetScript = target.GetComponent<Character>();
             SwitchState(State.chasing);
         }
     }

@@ -7,8 +7,8 @@ public class Character : MonoBehaviour
     public int health;
     public int attackDamage;
     public bool isDead;
-    protected float actionDistance = 2.5f;
-    protected int attackSpeed;
+    public Rigidbody rb;
+    protected float actionDistance = 5.5f;
     protected GameObject target;
     protected int maxHealth;
     // Start is called before the first frame update
@@ -29,6 +29,7 @@ public class Character : MonoBehaviour
         {
             health = 0;
             isDead = true;
+            rb.constraints = RigidbodyConstraints.FreezeAll;
         }
     }
 }

@@ -11,7 +11,6 @@ public class Player : Character
     public Text healthtxt;
     protected Enemy enemyScript;
     private float originSpeed;
-    private Rigidbody rb;
     private bool canAttack;
     private float distanceBetweenTarget;
     // Start is called before the first frame update
@@ -20,14 +19,13 @@ public class Player : Character
         maxHealth = health;
         isDead = false;
         canAttack = false;
-        rb = GetComponent<Rigidbody>();
+        rb = this.gameObject.GetComponent<Rigidbody>();
         originSpeed = speed;
     }
 
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(distanceBetweenTarget);
         healthtxt.text = health.ToString();
         float Xaxis = Input.GetAxis("Horizontal") * speed;
         float Zaxis = Input.GetAxis("Vertical") * speed;
@@ -75,11 +73,6 @@ public class Player : Character
             this.gameObject.transform.localScale = new Vector3(this.gameObject.transform.localScale.x, this.gameObject.transform.localScale.y * 1.25f, this.gameObject.transform.localScale.z);
             crouching = false;
         }
-
-        //if (Input.GetKeyDown(KeyCode.Space))
-        //{
-        //transform.Translate(0, jumpHeight * Time.deltaTime, 0);
-        //}
     }
     public void OnTriggerEnter(Collider other)
     {
@@ -89,5 +82,13 @@ public class Player : Character
             enemyScript = target.GetComponent<Enemy>();
         }
     }
-    
+    public void OnCollisionEnter(Collision other)
+    {
+        if (other.gameObject.tag != "NonTarget" && other.gameObject.tag != this.gameObject.tag)
+        {
+            target = other.gameObject;
+            enemyScript = target.GetComponent<Enemy>();
+        }
+    }
+
 }
