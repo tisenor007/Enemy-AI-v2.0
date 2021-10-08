@@ -141,7 +141,7 @@ public class Enemy : Character
                     Heal(maxHealth / 4);
                     healingCoolDown = maxHealCoolDown;
                 }
-                if (distanceBetweenHomeBase <= actionDistance)
+                if (distanceBetweenHomeBase <= actionDistance && health < maxHealth)
                 {
                     SwitchState(State.resting);
                 }
