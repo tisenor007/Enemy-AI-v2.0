@@ -16,10 +16,12 @@ public class ButtonManager : MonoBehaviour
     {
         
     }
+    //simply just re-loads main scene
     public void ResetLevel()
     {
         SceneManager.LoadScene("SampleScene", LoadSceneMode.Single);
     }
+    //closes application
     public void EndGame()
     {
         Application.Quit();

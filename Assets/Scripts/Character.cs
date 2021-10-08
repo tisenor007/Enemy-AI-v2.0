@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Character : MonoBehaviour
 {
+    //variables
     public int health;
     public int attackDamage;
     public bool isDead;
@@ -27,6 +28,7 @@ public class Character : MonoBehaviour
     {
         
     }
+    //take damage method that freezes character if they die
     public void TakeDamage(int damage)
     {
         health = health - damage;
@@ -37,6 +39,7 @@ public class Character : MonoBehaviour
             rb.constraints = RigidbodyConstraints.FreezeAll;
         }
     }
+    //healing method.......
     public void Heal(int hp)
     {
         health = health + hp;

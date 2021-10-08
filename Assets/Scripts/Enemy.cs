@@ -6,12 +6,12 @@ using UnityEngine.UI;
 
 public class Enemy : Character
 {
-    //implement this.tag, such&such for possible breeding....
+    //variables
     public Transform[] patrolPoints;
     public NavMeshAgent enemy;
 
     public int tunnelVision;//rayRange
-    public int awareness;
+    public int awareness; //hearing / detecting range
     public int attackDelay;
     [Header("For Health bar")]
     public Image healthBar;
@@ -29,6 +29,7 @@ public class Enemy : Character
     private Vector3 originPos;
     private Vector3 originRot;
     private float originSize;
+    //9 states
     protected enum State
     {
         patrolling,
@@ -44,10 +45,8 @@ public class Enemy : Character
     protected State state;
 
     protected float distanceBetweenTarget;
-
     protected Vector3 targetLastKnownPos;
-
-    
+ 
     protected int patrolDestination;
     private int patrolPointAmount = 16;
 
@@ -57,17 +56,24 @@ public class Enemy : Character
     // Start is called before the first frame update
     void Start()
     {
+        //enemy crouching has not been implemented yet
         crouching = false;
+        //sets max variables 
         maxHealCoolDown = healingCoolDown;
+        //retrieves rigidbody for you
         rb = this.gameObject.GetComponent<Rigidbody>();
         attackDelay = attackDelay * 100;
         maxAttackDelay = attackDelay;
+        //position/rotation for guards
         originPos = this.transform.position;
         originRot = this.transform.eulerAngles;
         maxHealth = health;
+        //is not dead on spawn
         isDead = false;
+        //original speed and awareness because these variables are doubled when chasing so they need to return to original value afterwards
         originSpeed = enemy.speed;
         originAwareness = awareness;
+        //more max vairables
         maxAwareness = awareness * 2;
         maxSpeed = enemy.speed * 2;
 
@@ -75,8 +81,9 @@ public class Enemy : Character
         ray = new Ray(this.transform.position, this.transform.forward);
 
         enemy = GetComponent<NavMeshAgent>();
-
+        //resets patrol position
         patrolDestination = 0;
+        //if enemy is set to be a guard it will guard else it will roam / patrol
         if (isGuard == true) {SwitchState(State.guarding); }
         else {SwitchState(State.patrolling); }
     }
@@ -272,6 +279,7 @@ public class Enemy : Character
             }
         }
     }
+    //method that switches states
     protected void SwitchState(State newState)
     {
         state = newState;
@@ -314,6 +322,7 @@ public class Enemy : Character
                 break;
         }
     }
+    //methods that go with states
     public void Flee()
     {
         enemy.SetDestination(homeBase.transform.position);
@@ -361,6 +370,7 @@ public class Enemy : Character
     {
         targetScript.TakeDamage(this.attackDamage);
     }
+    //if something that is possible target enters trigger, they will become target
     public void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.tag != "NonTarget" && other.gameObject.tag != this.gameObject.tag && isDead == false)
@@ -369,6 +379,7 @@ public class Enemy : Character
             targetScript = target.GetComponent<Character>();
         }
     }
+    //if a possible target hits enemy and is enemy is not fleeing, it will attack
     public void OnCollisionEnter(Collision other)
     {
         if (other.gameObject.tag != "NonTarget" && other.gameObject.tag != this.gameObject.tag && isDead == false)
