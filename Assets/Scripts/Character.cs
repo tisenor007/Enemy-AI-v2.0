@@ -12,8 +12,8 @@ public class Character : MonoBehaviour
     public GameObject homeBase;
     public bool crouching = false;
     protected float distanceBetweenHomeBase;
-    protected int healingCoolDown = 2000;
-    protected int maxHealCoolDown;
+    protected int healingCoolDown = 2;
+    protected int nextHealCoolDown = 2;
     protected float actionDistance = 5.5f;
     protected GameObject target;
     protected int maxHealth;

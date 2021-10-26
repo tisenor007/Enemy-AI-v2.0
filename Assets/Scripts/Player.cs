@@ -18,7 +18,6 @@ public class Player : Character
     void Start()
     {
         //sets max varibles to current variables because everything starts with max stats
-        maxHealCoolDown = healingCoolDown;
         maxHealth = health;
         //obviously don't want be dead or attacking when loaded into level
         isDead = false;
@@ -50,12 +49,12 @@ public class Player : Character
             //healing mech that prevents rapid function
             if (distanceBetweenHomeBase <= actionDistance)
             {
-                healingCoolDown--;
-                if (healingCoolDown <= 10)
+                
+                if (Time.time > nextHealCoolDown )
                 {
                     //always heals a 4th of max health
                     Heal(maxHealth / 4);
-                    healingCoolDown = maxHealCoolDown;
+                    nextHealCoolDown = Mathf.RoundToInt(Time.time) + healingCoolDown;
                 }
             }
 
