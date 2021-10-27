@@ -5508,6 +5508,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1445695622766180100, guid: c6e056ebe362a7c4c9e4839da3b8caf0, type: 3}
+      propertyPath: m_Constraints
+      value: 126
+      objectReference: {fileID: 0}
     - target: {fileID: 1445695622766180105, guid: c6e056ebe362a7c4c9e4839da3b8caf0, type: 3}
       propertyPath: m_RootOrder
       value: 25
@@ -9900,6 +9904,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 9063389719640196658, guid: 03130af23b9731940a88ba107781fd36, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9063389720808930769, guid: 03130af23b9731940a88ba107781fd36, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 9063389720860212303, guid: 03130af23b9731940a88ba107781fd36, type: 3}
       propertyPath: m_Name
       value: Zombie
