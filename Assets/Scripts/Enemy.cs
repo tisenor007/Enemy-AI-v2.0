@@ -25,10 +25,7 @@ public class Enemy : Character
     protected int maxAwareness;
     protected float maxSpeed;
 
-    private int nextAttackDelay;
-    private Vector3 originPos;
-    private Vector3 originRot;
-    private float originSize;
+  
     //9 states
     protected enum State
     {
@@ -50,8 +47,13 @@ public class Enemy : Character
     protected int patrolDestination;
     private int patrolPointAmount = 16;
 
+    private bool isGettingBumped;
     private Ray ray;
     private RaycastHit rayHit;
+    private int nextAttackDelay;
+    private Vector3 originPos;
+    private Vector3 originRot;
+    private float originSize;
 
     // Start is called before the first frame update
     void Start()
@@ -95,7 +97,10 @@ public class Enemy : Character
         canvas.transform.LookAt(canvas.transform.position + camera.forward);
         Debug.Log(state);
         //Debug.Log(distanceBetweenHomeBase);
-
+        if (isDead == true && state != State.dead)
+        {
+            state = State.dead;
+        }
         //will not calculate distance between target if target is not defined......
         if (target != null && isDead == false)
         {
@@ -111,8 +116,10 @@ public class Enemy : Character
                 {
                     PatrolNextPoint();
                 }
-                DecideFleeOrChase();
-                checkToDie();
+                GeneralBehaviorCheck();
+                if (amAlmostDead() == true) { state = State.fleeing; }
+                if (targetDetected() == true) { state = State.chasing; }
+                if (targetWithinRange() == true) { state = State.attacking; }
                 break;
             case State.fleeing:
                 enemy.autoBraking = false;
@@ -121,7 +128,7 @@ public class Enemy : Character
                 {
                     state = State.resting;
                 }
-                checkToDie();
+                GeneralBehaviorCheck();
                 break;
             case State.resting:
                 enemy.autoBraking = true;
@@ -130,7 +137,6 @@ public class Enemy : Character
                     if (isGuard == true) { state = State.guarding; }
                     else { state = State.retreating; }
                 }
-                
                 if (Time.time > nextHealCoolDown)
                 {
                     Heal(maxHealth / 4);
@@ -140,7 +146,7 @@ public class Enemy : Character
                 {
                     state = State.resting;
                 }
-                checkToDie();
+                GeneralBehaviorCheck();
                 break;
             case State.attacking:
                 enemy.autoBraking = true;
@@ -169,8 +175,8 @@ public class Enemy : Character
                         }
                     }
                 }
-                DecideFleeOrChase();
-                checkToDie();
+                GeneralBehaviorCheck();
+                if (amAlmostDead() == true) { state = State.fleeing; }
                 break;
             case State.chasing:
                 enemy.autoBraking = false;
@@ -216,27 +222,36 @@ public class Enemy : Character
                 {
                     state = State.fleeing;
                 }
-                checkToDie();
+                GeneralBehaviorCheck();
+                if (amAlmostDead() == true) { state = State.fleeing; }
+                if (targetDetected() == true) { state = State.chasing; }
+                if (targetWithinRange() == true) { state = State.attacking; }
                 break;
             case State.searching:
                 enemy.autoBraking = false;
                 Search();
                 float searchDistance = Vector3.Distance(targetLastKnownPos, enemy.transform.position);
                 if (searchDistance <= actionDistance) { state = State.retreating; }
-                DecideFleeOrChase();
-                checkToDie();
+                GeneralBehaviorCheck();
+                if (amAlmostDead() == true) { state = State.fleeing; }
+                if (targetDetected() == true) { state = State.chasing; }
+                if (targetWithinRange() == true) { state = State.attacking; }
                 break;
             case State.retreating:
                 enemy.autoBraking = false;
                 Retreat();
                 if (isGuard == true) { state = State.guarding; }
+                if (targetDetected() == true) { state = State.chasing; }
+                if (targetWithinRange() == true) { state = State.attacking; }
                 else
                 {
                     float startDistance = Vector3.Distance(patrolPoints[0].position, enemy.transform.position);
                     if (startDistance <= actionDistance) { state = State.patrolling; }
                 }
-                DecideFleeOrChase();
-                checkToDie();
+                GeneralBehaviorCheck();
+                if (amAlmostDead() == true) { state = State.fleeing; }
+                if (targetDetected() == true) { state = State.chasing; }
+                if (targetWithinRange() == true) { state = State.attacking; }
                 break;
             case State.guarding:
                 enemy.autoBraking = true;
@@ -246,8 +261,10 @@ public class Enemy : Character
                 {
                     enemy.transform.eulerAngles = originRot;
                 }
-                DecideFleeOrChase();
-                checkToDie();
+                GeneralBehaviorCheck();
+                if (amAlmostDead() == true) { state = State.fleeing; }
+                if (targetDetected() == true) { state = State.chasing; }
+                if (targetWithinRange() == true) { state = State.attacking; }
                 break;
             case State.dead:
                 enemy.autoBraking = true;
@@ -255,21 +272,36 @@ public class Enemy : Character
                 break;
         }
     }
-    public void checkToDie()
-    {
-        if (isDead == true && state != State.dead)
-        {
-            state = State.dead;
-        }
-    }
-   
-    //use this in every state check except for fleeing and resting
-    public void DecideFleeOrChase()
+    
+    public bool amAlmostDead()
     {
         if (health <= (maxHealth / 4))
         {
-            state = State.fleeing;
+            //state = State.fleeing;
+            return true;
         }
+        else
+        {
+            return false;
+        }
+    }
+    public bool targetWithinRange()
+    {
+        if (target != null)
+        {
+            if (distanceBetweenTarget <= actionDistance)
+            {
+                if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && targetScript.crouching == false && targetScript.isDead == false)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    public bool targetDetected()
+    {
+       
         if (Physics.Raycast(transform.position, transform.forward, out rayHit, tunnelVision))
         {
             if (rayHit.transform.gameObject.tag != "NonTarget" && rayHit.transform.gameObject.tag != this.gameObject.tag)
@@ -279,7 +311,7 @@ public class Enemy : Character
                 targetScript = target.GetComponent<Character>();
                 if (distanceBetweenTarget > actionDistance && targetScript.isDead == false && state != State.fleeing)
                 {
-                    state = State.chasing;
+                    return true;
                 }
             }
         }
@@ -290,14 +322,52 @@ public class Enemy : Character
             {
                 if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && targetScript.crouching == false && targetScript.isDead == false && state != State.fleeing)
                 {
-                    state = State.chasing;
+                    return true;
                 }
             }
-            if (distanceBetweenTarget <= actionDistance)
+        }
+        return false;
+    }
+    //Just background behavior put into a method for effciency, That is if they are alive
+    public void GeneralBehaviorCheck()
+    {
+        
+      
+        if (state != State.fleeing && state != State.resting && state != State.dead)
+        {
+            if (health <= (maxHealth / 4))
             {
-                if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && targetScript.crouching == false && targetScript.isDead == false)
+                state = State.fleeing;
+            }
+            if (Physics.Raycast(transform.position, transform.forward, out rayHit, tunnelVision))
+            {
+                if (rayHit.transform.gameObject.tag != "NonTarget" && rayHit.transform.gameObject.tag != this.gameObject.tag)
                 {
-                    state = State.attacking;
+                    //Debug.Log("AYOOO");
+                    target = rayHit.transform.gameObject;
+                    targetScript = target.GetComponent<Character>();
+                    if (distanceBetweenTarget > actionDistance && targetScript.isDead == false && state != State.fleeing)
+                    {
+                        state = State.chasing;
+                    }
+                }
+            }
+
+            if (target != null)
+            {
+                if (distanceBetweenTarget <= awareness && distanceBetweenTarget > actionDistance)
+                {
+                    if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && targetScript.crouching == false && targetScript.isDead == false && state != State.fleeing)
+                    {
+                        state = State.chasing;
+                    }
+                }
+                if (distanceBetweenTarget <= actionDistance)
+                {
+                    if (target.tag != "NonTarget" && target.tag != this.gameObject.tag && targetScript.crouching == false && targetScript.isDead == false)
+                    {
+                        state = State.attacking;
+                    }
                 }
             }
         }
@@ -366,10 +436,7 @@ public class Enemy : Character
         {
             target = other.gameObject;
             targetScript = target.GetComponent<Character>();
-            if (state != State.fleeing)
-            {
-                state = State.attacking;
-            }
+            isGettingBumped = true;
         }
     }
 }
