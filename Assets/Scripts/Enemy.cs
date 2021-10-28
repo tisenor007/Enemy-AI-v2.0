@@ -178,6 +178,10 @@ public class Enemy : Character
     public void Patrol()
     {
         enemy.autoBraking = false;
+        if (isGettingBumped == true) { isGettingBumped = false; state = State.attacking; }
+        if (amAlmostDead() == true) { state = State.fleeing; }
+        if (targetDetected() == true) { state = State.chasing; }
+        if (targetWithinRange() == true) { state = State.attacking; }
         if (!enemy.pathPending && enemy.remainingDistance < actionDistance) {
             enemy.speed = originSpeed;
             awareness = originAwareness;
@@ -185,10 +189,6 @@ public class Enemy : Character
             enemy.destination = patrolPoints[patrolDestination].position;
             patrolDestination = (patrolDestination + 1) % patrolPoints.Length;
         }
-        if (isGettingBumped == true) { isGettingBumped = false; state = State.attacking; }
-        if (amAlmostDead() == true) { state = State.fleeing; }
-        if (targetDetected() == true) { state = State.chasing; }
-        if (targetWithinRange() == true) { state = State.attacking; }
     }
 
     public void Retreat()
@@ -197,16 +197,17 @@ public class Enemy : Character
         enemy.speed = originSpeed;
         awareness = originAwareness;
         enemy.SetDestination(patrolPoints[0].position);
+        if (isGettingBumped == true) { isGettingBumped = false; state = State.attacking; }
+        if (amAlmostDead() == true) { state = State.fleeing; }
+        if (targetDetected() == true) { state = State.chasing; }
+        if (targetWithinRange() == true) { state = State.attacking; }
         if (isGuard == true) { state = State.guarding; }
         else
         {
             float startDistance = Vector3.Distance(patrolPoints[0].position, enemy.transform.position);
             if (startDistance <= actionDistance) { state = State.patrolling; }
         }
-        if (isGettingBumped == true) { isGettingBumped = false; state = State.attacking; }
-        if (amAlmostDead() == true) { state = State.fleeing; }
-        if (targetDetected() == true) { state = State.chasing; }
-        if (targetWithinRange() == true) { state = State.attacking; }
+       
     }
     public void Chase()
     {
